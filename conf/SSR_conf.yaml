@@ -10,10 +10,15 @@ data_setup:
   spk_list: ['F01', 'F02', 'F03', 'F04', 'M01', 'M02', 'M03', 'M04'] # ['F01', 'F02', 'F03', 'F04', 'M01', 'M02', 'M03', 'M04']
   
 data_augmentation:
-  random_rotate: True
+  random_rotate: False
   random_noise: False
-  random_mask: False
+  random_time_mask: True
+  random_freq_mask: False
   
+random_time_mask:
+  ratio: 0.5
+  mask_num: 20
+    
 random_rotate:
   ratio: 0.7
   r_min: -30
@@ -33,7 +38,7 @@ articulatory_data:
   Procrustes: False
   
 deep_speech_setup:
-  n_cnn_layers: 1
+  n_cnn_layers: 2
   n_rnn_layers: 2
   rnn_dim: 512
   stride: 2

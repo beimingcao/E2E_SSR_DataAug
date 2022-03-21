@@ -2,6 +2,31 @@ import numpy as np
 import librosa
 import torch
 import random
+import torchaudio
+
+class ema_time_mask(object):
+    def __init__(self, prob = 0.5, mask_num = 20):
+        self.prob = prob
+        self.mask_num = mask_num
+           
+    def __call__(self, ema):
+        masking = torchaudio.transforms.TimeMasking(time_mask_param=self.mask_num)
+        if random.random() < self.prob:
+            for j in range(ema.shape[0]):
+                ema[j,0,:,:] = masking(ema[j,0,:,:])                      
+        return ema
+        
+class ema_freq_mask(object):
+    def __init__(self, prob = 0.5, mask_num = 20):
+        self.prob = prob
+        self.mask_num = mask_num
+           
+    def __call__(self, ema):
+        masking = torchaudio.transforms.FrequencyMasking(freq_mask_param=self.mask_num)
+        if random.random() < self.prob:
+            for j in range(ema.shape[0]):
+                ema[j,0,:,:] = masking(ema[j,0,:,:])                      
+        return ema
 
 class ema_random_rotate(object):
     def __init__(self, prob = 0.5, angle_range = [-30, 30]):
@@ -24,8 +49,7 @@ class ema_random_rotate(object):
     def __call__(self, ema):
         if random.random() < self.prob:
             angle = random.randint(self.angle_range[0], self.angle_range[1])
-            ema = torch.from_numpy(self.rotation(ema, angle))
-                        
+            ema = torch.from_numpy(self.rotation(ema, angle))                        
         return ema
 
 class Transform_Compose(object):

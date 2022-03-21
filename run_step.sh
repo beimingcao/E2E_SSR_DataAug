@@ -8,7 +8,7 @@ conf_dir=conf/SSR_conf.yaml
 experiments_dir=experiments
 current_exp=current_exp
 
-stage=0
+stage=2
 
 if [ $stage -le 0 ];then
 echo "New experiments, converting data in binary type, and put into current_exp folder, apply sample-level transforms"

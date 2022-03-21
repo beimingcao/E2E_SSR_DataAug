@@ -13,10 +13,11 @@ from utils.utils import EarlyStopping, IterMeter, data_processing_DeepSpeech
 import torch.nn.functional as F
 
 import random
-from utils.transforms import ema_random_rotate
+from utils.transforms import ema_random_rotate, ema_time_mask, ema_freq_mask
 from utils.transforms import apply_delta_deltadelta, Transform_Compose
-from utils.transforms import apply_MVN, 
+from utils.transforms import apply_MVN
 import numpy as np
+import torchaudio
 
 seed = 123
 torch.manual_seed(seed)
@@ -26,30 +27,6 @@ random.seed(seed)
 torch.backends.cudnn.benchmark = False
 torch.backends.cudnn.deterministic = True
 
-class ema_random_rotate(object):
-    def __init__(self, prob = 0.5, angle_range = [-30, 30]):
-        self.prob = prob
-        self.angle_range = angle_range
-        
-    def rotation(self, EMA, angle):
-        import math
-
-        rotate_matrix = np.matrix([[math.cos(angle), math.sin(angle)], [-math.sin(angle), math.cos(angle)]])
-        EMA_rotated = np.zeros((EMA.shape[0], 1, EMA.shape[2], EMA.shape[3]))
-        for j in range(EMA.shape[0]):
-            for i in range(int((EMA.shape[2])/2)):
-                sensor_2D = EMA[j,0,[2*i, 2*i+1],:]
-                sensor_2D_rotated = np.dot(sensor_2D.T, rotate_matrix)
-                EMA_rotated[j,0,[2*i, 2*i+1],:] = sensor_2D_rotated.T
-
-        return EMA_rotated        
-   
-    def __call__(self, ema):
-        if random.random() < self.prob:
-            angle = random.randint(self.angle_range[0], self.angle_range[1])
-            ema = torch.from_numpy(self.rotation(ema, angle))
-                        
-        return ema
 
 def train_DeepSpeech(test_SPK, train_dataset, valid_dataset, exp_output_folder, args):
 
@@ -87,7 +64,8 @@ def train_DeepSpeech(test_SPK, train_dataset, valid_dataset, exp_output_folder, 
     
     random_rotate_apply = config['data_augmentation']['random_rotate']
     random_noise_add = config['data_augmentation']['random_noise']
-    random_mask = config['data_augmentation']['random_mask']
+    random_time_mask = config['data_augmentation']['random_time_mask']
+    random_freq_mask = config['data_augmentation']['random_freq_mask']
     
     train_transform = []
     valid_transform = []
@@ -157,7 +135,22 @@ def train_DeepSpeech(test_SPK, train_dataset, valid_dataset, exp_output_folder, 
                 
                     random_rotate = ema_random_rotate(prob = ratio, angle_range = [r_min, r_max])
                     ema = random_rotate(ema).float()
-                    ema, labels = ema.to(device), labels.to(device)
+                    
+                if random_time_mask == True:             
+                    ratio = config['random_time_mask']['ratio']
+                    mask_frame_num = config['random_time_mask']['mask_num']
+               
+                    random_time_masker = ema_time_mask(prob = ratio, mask_num = mask_frame_num)
+                    ema = random_time_masker(ema).float()
+                    
+                if random_freq_mask == True:             
+                    ratio = config['random_freq_mask']['ratio']
+                    mask_frame_num = config['random_freq_mask']['mask_num']
+               
+                    random_freq_masker = ema_freq_mask(prob = ratio, mask_num = mask_frame_num)
+                    ema = random_freq_masker(ema).float()
+                    
+                ema, labels = ema.to(device), labels.to(device)
                                        
                 output = model(ema)  # (batch, time, n_class)
 

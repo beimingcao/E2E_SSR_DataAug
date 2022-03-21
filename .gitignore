@@ -1,0 +1,12 @@
+
+*.ema
+
+*.phn
+
+*.wav
+
+*.wrd
+
+*.pkl
+
+experiments/asdf/trained_models/

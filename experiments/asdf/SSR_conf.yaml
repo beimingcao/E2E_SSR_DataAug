@@ -1,0 +1,50 @@
+corpus:
+  name: 'Haskins_IEEE'
+  path: /home/beiming/RAW_DATA/Haskins_IEEE                 
+
+experimental_setup:
+  model_type: 'SSR'                     
+  experiment_type: 'SD'
+
+data_setup:
+  spk_list: ['F01', 'F02', 'F03', 'F04', 'M01', 'M02', 'M03', 'M04'] # ['F01', 'F02', 'F03', 'F04', 'M01', 'M02', 'M03', 'M04']
+  
+data_augmentation:
+  random_rotate: True
+  random_noise: False
+  random_mask: False
+  
+random_rotate:
+  ratio: 0.7
+  r_min: -30
+  r_max: 30
+  
+random_noise:
+  ratio: 0.7
+  r_min: -30
+  r_max: 30
+  
+articulatory_data:
+  sel_sensors: ['TB', 'TT', 'UL', 'LL']   # org_sensor_list = ['TR', 'TB', 'TT', 'UL', 'LL', 'ML', 'JAW', 'JAWL']
+  sel_dim: ['px', 'pz']                          # org_dim_per_sensor = ['px', 'py', 'pz', 'ox', 'oy', 'oz']
+  lateral: 'xz'
+  normalize_input: True
+  delta: True
+  Procrustes: False
+  
+deep_speech_setup:
+  n_cnn_layers: 2
+  n_rnn_layers: 2
+  rnn_dim: 512
+  stride: 2
+  dropout: 0.3
+  learning_rate: 0.0005 #1e-4
+  batch_size: 16
+  epochs: 80
+  early_stop: True
+  patient: 10
+
+testing_setup:
+  save_model: True
+  decoding: Greedy
+  beam_size: 2
