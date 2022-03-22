@@ -13,7 +13,7 @@ from utils.utils import EarlyStopping, IterMeter, data_processing_DeepSpeech
 import torch.nn.functional as F
 
 import random
-from utils.transforms import ema_random_rotate, ema_time_mask, ema_freq_mask
+from utils.transforms import ema_random_rotate, ema_time_mask, ema_freq_mask, ema_sin_noise
 from utils.transforms import apply_delta_deltadelta, Transform_Compose
 from utils.transforms import apply_MVN
 import numpy as np
@@ -61,7 +61,7 @@ def train_DeepSpeech(test_SPK, train_dataset, valid_dataset, exp_output_folder, 
     results = os.path.join(train_out_folder, test_SPK + '_train.txt')
     
     ### Model training ###
-    
+    random_sin_noise_inj = config['data_augmentation']['random_sin_noise_inj']
     random_rotate_apply = config['data_augmentation']['random_rotate']
     random_noise_add = config['data_augmentation']['random_noise']
     random_time_mask = config['data_augmentation']['random_time_mask']
@@ -128,11 +128,18 @@ def train_DeepSpeech(test_SPK, train_dataset, valid_dataset, exp_output_folder, 
             for batch_idx, _data in enumerate(train_loader):
                 file_id, ema, labels, input_lengths, label_lengths = _data 
                 
+                if random_sin_noise_inj == True:
+                    ratio = config['random_sin_noise_inj']['ratio']
+                    noise_energy_ratio = config['random_sin_noise_inj']['noise_energy_ratio']                   
+                    noise_freq = config['random_sin_noise_inj']['noise_freq']
+                    fs = config['random_sin_noise_inj']['fs']
+                    random_noise_apply = ema_sin_noise(ratio,  noise_energy_ratio,  noise_freq, fs)
+                    ema = random_noise_apply(ema).float()                    
+                                    
                 if random_rotate_apply == True:                
                     ratio = config['random_rotate']['ratio']
                     r_min = config['random_rotate']['r_min']
-                    r_max = config['random_rotate']['r_max']                    
-                
+                    r_max = config['random_rotate']['r_max']                                   
                     random_rotate = ema_random_rotate(prob = ratio, angle_range = [r_min, r_max])
                     ema = random_rotate(ema).float()
                     

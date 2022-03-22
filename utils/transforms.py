@@ -4,6 +4,25 @@ import torch
 import random
 import torchaudio
 
+class ema_sin_noise(object):
+    def __init__(self, prob = 0.5, noise_energy_ratio = 0.1, noise_freq  = 40, fs=100):
+        self.prob = prob
+        self.noise_energy_ratio = noise_energy_ratio
+        self.noise_freq = noise_freq
+        self.fs = fs
+        
+    def noise_injection(self, ema, noise_energy_ratio, noise_freq, fs):
+        for i in range(ema.shape[0]):
+            x = np.arange(ema.shape[3])
+            sin_noise = torch.outer(torch.Tensor(np.sin(2 * np.pi * noise_freq * x / fs)), torch.abs(ema.mean(3)[i,0]))
+            ema[i,0] = ema[i,0] + sin_noise.T
+        return ema
+        
+    def __call__(self, ema):
+        if random.random() < self.prob:
+            ema = self.noise_injection(ema, self.noise_energy_ratio, self.noise_freq, self.fs) 
+        return ema
+
 class ema_time_mask(object):
     def __init__(self, prob = 0.5, mask_num = 20):
         self.prob = prob
@@ -13,8 +32,9 @@ class ema_time_mask(object):
         masking = torchaudio.transforms.TimeMasking(time_mask_param=self.mask_num)
         if random.random() < self.prob:
             for j in range(ema.shape[0]):
-                ema[j,0,:,:] = masking(ema[j,0,:,:])                      
+                ema[j,0,:,:] = masking(ema[j,0,:,:])                 
         return ema
+        
         
 class ema_freq_mask(object):
     def __init__(self, prob = 0.5, mask_num = 20):

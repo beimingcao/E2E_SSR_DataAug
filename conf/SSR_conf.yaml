@@ -10,19 +10,30 @@ data_setup:
   spk_list: ['F01', 'F02', 'F03', 'F04', 'M01', 'M02', 'M03', 'M04'] # ['F01', 'F02', 'F03', 'F04', 'M01', 'M02', 'M03', 'M04']
   
 data_augmentation:
+  random_sin_noise_inj: True
   random_rotate: False
   random_noise: False
-  random_time_mask: True
+  random_time_mask: False
   random_freq_mask: False
   
+random_sin_noise_inj:
+  ratio: 0.8
+  noise_energy_ratio: 0.1
+  noise_freq: 40
+  fs: 100
+  
 random_time_mask:
-  ratio: 0.5
+  ratio: 0.8
+  mask_num: 50
+  
+random_freq_mask:
+  ratio: 0.8
   mask_num: 20
     
 random_rotate:
-  ratio: 0.7
-  r_min: -30
-  r_max: 30
+  ratio: 0.8
+  r_min: -10
+  r_max: 10
   
 random_noise:
   ratio: 0.7
